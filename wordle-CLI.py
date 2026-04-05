@@ -2,6 +2,7 @@ import os
 import sys
 import tty
 import termios
+import traceback
 from rich.console import Console
 from rich.panel import Panel
 
@@ -56,4 +57,16 @@ def print_colored_chars(chars: str, colors: list[str]) -> None:
 
     print(string, justify="center")
 
-print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
+try:
+    _print("\033[?1047h\033[?25l\r\033[1000A", end="")
+    print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
+    input()
+
+except Exception:
+    _print("\033[?1047l\033[?25h", end="")
+    traceback.print_exc()
+    exit(1)
+
+else:
+    _print("\033[?1047l\033[?25h", end="")
+    exit(0)
