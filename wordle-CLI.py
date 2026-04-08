@@ -3,11 +3,14 @@ import sys
 import tty
 import termios
 import traceback
+import string
 import re
 import requests
 from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
+
+# TODO: use getch() for exit prompt
 
 VERSION = "v0.1.0-alpha"
 guesses = 6
@@ -32,6 +35,28 @@ def getch(s: str = "", show_input: bool = False) -> str:
     if show_input:
         _print(ch)
     return ch
+
+def word_input(s: str) -> str:
+    # _print("\033[?25h", end="")
+    print(s, end="")
+    r = []
+    while True:
+        c = getch().upper()
+        if c == "\r":
+            # _print("\n\033[?25l", end="")
+            _print()
+            return "".join(r)
+        elif c == "\177":
+            if r:
+                _print("\033[D\033[0K", end="", flush=True)
+                del r[-1]
+        elif c == "\x03":
+            raise KeyboardInterrupt
+        elif len(r) >= 5 or c not in string.ascii_letters:
+            continue
+        else:
+            _print(c, end="", flush=True)
+            r += c
 
 def print_panel(text, border_style = "bold cyan", expand: bool = True) -> None:
     panel = Panel(
@@ -77,7 +102,7 @@ try:
     print("[bright_green]Successfully fetched![/]\n")
 
     while True:
-        user_inp = input(f"({guesses})> ").upper()
+        user_inp = word_input(f"({guesses})> ")
 
         if len(user_inp) != 5:
             print("Isn't 5 letters long!")
