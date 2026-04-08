@@ -10,7 +10,7 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-VERSION = "v0.1.0-alpha"
+VERSION = "v0.2.0-alpha"
 guesses = 6
 
 _print = print
