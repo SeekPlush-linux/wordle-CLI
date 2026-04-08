@@ -10,8 +10,6 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-# TODO: use getch() for exit prompt
-
 VERSION = "v0.1.0-alpha"
 guesses = 6
 
@@ -138,6 +136,7 @@ except Exception:
     traceback.print_exc()
 
 finally:
-    input("\nPress Enter to exit.\n")
+    print("\n[bright_yellow]Press any key to exit.[/]")
+    getch()
     _print("\033[?1049l", end="")
     sys.exit(status)
