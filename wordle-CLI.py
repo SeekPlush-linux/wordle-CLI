@@ -69,7 +69,7 @@ def print_colored_chars(chars: str, colors: list[str]) -> None:
     temp = []
 
     for c, clr in zip(chars, colors):
-        temp.append(f"[{clr}]▄▄▄[/]")
+        temp.append(f"[{clr}]▂▂▂[/]")
     string += " ".join(temp) + "\n"
     temp = []
 
@@ -79,7 +79,7 @@ def print_colored_chars(chars: str, colors: list[str]) -> None:
     temp = []
 
     for c, clr in zip(chars, colors):
-        temp.append(f"[{clr}]▀▀▀[/]")
+        temp.append(f"[{clr}]🮂🮂🮂[/]")
     string += " ".join(temp)
 
     print(string, justify="center")
