@@ -10,8 +10,27 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-VERSION = "v0.2.0-alpha"
-guesses = 6
+# TODO: fix visuals, especially with the keyboard
+# TODO: fix guesses decrementing even if input isnt 5 letters long
+# TODO: fix inputted letters, that have previously been entered before, inheriting their colors
+# TODO: fix colors of letters in previous guesses changing
+# TODO: fix letters that appear more than once in a guess show the same color, specifically the color of the last instance of the letter
+# TODO: make letters bold
+# TODO: add mouse support to be able to use the on-screen keyboard
+
+VERSION = "v0.3.0-beta"
+GUESSES = 6
+
+guesses_used = 0
+words = [" " * 5] * 6
+letter_colors = {}
+for l in string.ascii_uppercase + " ":
+    letter_colors[l] = "white"
+KEYBOARD_LETTERS = [
+    "QWERTYUIOP",
+    "ASDFGHJKL",
+    "ZXCVBNM",
+]
 
 _print = print
 con = Console(highlight=False)
@@ -34,28 +53,6 @@ def getch(s: str = "", show_input: bool = False) -> str:
         _print(ch)
     return ch
 
-def word_input(s: str) -> str:
-    # _print("\033[?25h", end="")
-    print(s, end="")
-    r = []
-    while True:
-        c = getch().upper()
-        if c == "\r":
-            # _print("\n\033[?25l", end="")
-            _print()
-            return "".join(r)
-        elif c == "\177":
-            if r:
-                _print("\033[D\033[0K", end="", flush=True)
-                del r[-1]
-        elif c == "\x03":
-            raise KeyboardInterrupt
-        elif len(r) >= 5 or c not in string.ascii_letters:
-            continue
-        else:
-            _print(c, end="", flush=True)
-            r += c
-
 def print_panel(text, border_style = "bold cyan", expand: bool = True) -> None:
     panel = Panel(
         text,
@@ -64,30 +61,59 @@ def print_panel(text, border_style = "bold cyan", expand: bool = True) -> None:
     )
     print(panel, justify="center")
 
-def print_colored_chars(chars: str, colors: list[str]) -> None:
+def print_colored_chars(chars: str, colors: list[str], small_box: bool = False) -> None:
     string = ""
     temp = []
 
+    if not small_box:
+        for c, clr in zip(chars, colors):
+            if clr == "white":
+                temp.append(f"[black]▂▂▂[/]")
+            else:
+                temp.append(f"[{clr}]▂▂▂[/]")
+        string += " ".join(temp) + "\n"
+        temp = []
+
     for c, clr in zip(chars, colors):
-        temp.append(f"[{clr}]▂▂▂[/]")
+        if clr == "white":
+            temp.append(f"[black]▍{c}🮈[/]")
+        else:
+            temp.append(f"[#000000 on {clr}]⠀{c}⠀[/]") if not small_box else temp.append(f"[{clr}]🮈[/][#000000 on {clr}]{c}[/][{clr}]▍[/]")
     string += " ".join(temp) + "\n"
     temp = []
 
-    for c, clr in zip(chars, colors):
-        temp.append(f"[#000000 on {clr}]⠀{c}⠀[/]")
-    string += " ".join(temp) + "\n"
-    temp = []
-
-    for c, clr in zip(chars, colors):
-        temp.append(f"[{clr}]🮂🮂🮂[/]")
-    string += " ".join(temp)
+    if not small_box:
+        for c, clr in zip(chars, colors):
+            if clr == "white":
+                temp.append(f"[black]🮂🮂🮂[/]")
+            else:
+                temp.append(f"[{clr}]🮂🮂🮂[/]")
+        string += " ".join(temp)
 
     print(string, justify="center")
+
+def print_ui(words: list[str], letter_colors: dict[str, str]) -> None:
+    lines = os.get_terminal_size().lines
+
+    _print("\r\033[1000A\033[2J", end="")
+    print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
+
+    _print(f"\r\033[1000A\033[{lines // 2 - 11}B", end="")
+
+    for word in words:
+        colors = [letter_colors[c] for c in word]
+        print_colored_chars(word, colors)
+
+    print("\n")
+
+    for row_letters in KEYBOARD_LETTERS:
+        colors = [letter_colors[c] for c in row_letters]
+        print_colored_chars(row_letters, colors, small_box=True)
 
 status = 0
 
 try:
-    _print("\033[?1049h\r\033[1000A", end="")
+    _print("\033[?1049h\r\033[1000A\033[2J", end="")
     print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
 
     print("\n[bright_yellow]Fetching today's wordle...[/]")
@@ -99,15 +125,33 @@ try:
 
     print("[bright_green]Successfully fetched![/]\n")
 
+    print_ui(words, letter_colors)
+
     while True:
-        user_inp = word_input(f"({guesses})> ")
+        temp: list[str] = []
+        while True:
+            char = getch().upper()
+
+            if char == "\r":
+                break
+            elif char == "\177":
+                if temp:
+                    del temp[-1]
+                    words[guesses_used] = "".join([temp[i] if i < len(temp) else " " for i in range(5)])
+                    print_ui(words, letter_colors)
+            elif char == "\x03":
+                raise KeyboardInterrupt
+            elif len(temp) >= 5 or char not in string.ascii_letters:
+                continue
+            else:
+                temp += char
+                words[guesses_used] = "".join([temp[i] if i < len(temp) else " " for i in range(5)])
+                print_ui(words, letter_colors)
+
+        user_inp = words[guesses_used]
 
         if len(user_inp) != 5:
             print("Isn't 5 letters long!")
-            continue
-
-        if not bool(re.fullmatch("[A-Z]+", user_inp)):
-            print("Must contain only letters!")
             continue
 
         colors = []
@@ -118,16 +162,17 @@ try:
                 colors.append("yellow")
             else:
                 colors.append("black")
+            letter_colors[c] = colors[i]
 
-        print_colored_chars(user_inp, colors)
+        print_ui(words, letter_colors)
 
         if all([x == "green" for x in colors]):
             print("[bright_green]You guessed today's wordle! Congrats![/]")
             break
 
-        guesses -= 1
+        guesses_used += 1
 
-        if guesses == 0:
+        if guesses_used == GUESSES:
             print(f"[bright_red]You failed to guess today's wordle :c[/]\nToday's wordle is: [bold]{word}[/]")
             break
 
