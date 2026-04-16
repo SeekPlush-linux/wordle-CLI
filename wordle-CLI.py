@@ -14,9 +14,10 @@ from rich.panel import Panel
 
 VERSION = "v0.3.3-beta"
 GUESSES = 6
+WORD_LENGTH = 5
 
 guesses_used = 0
-words = [[(" ", "none")] * 5] * 6
+words = [[(" ", "none")] * WORD_LENGTH] * GUESSES
 letter_colors = {}
 for l in string.ascii_uppercase + " ":
     letter_colors[l] = "bright_white"
@@ -138,21 +139,21 @@ try:
             elif char == "\177":
                 if temp:
                     del temp[-1]
-                    words[guesses_used] = [(temp[i], "none") if i < len(temp) else (" ", "none") for i in range(5)]
+                    words[guesses_used] = [(temp[i], "none") if i < len(temp) else (" ", "none") for i in range(WORD_LENGTH)]
                     print_ui(words, letter_colors)
             elif char == "\x03":
                 raise KeyboardInterrupt
-            elif len(temp) >= 5 or char not in string.ascii_letters:
+            elif len(temp) >= WORD_LENGTH or char not in string.ascii_letters:
                 continue
             else:
                 temp += char
-                words[guesses_used] = [(temp[i], "none") if i < len(temp) else (" ", "none") for i in range(5)]
+                words[guesses_used] = [(temp[i], "none") if i < len(temp) else (" ", "none") for i in range(WORD_LENGTH)]
                 print_ui(words, letter_colors)
 
         user_inp = [x[0] for x in words[guesses_used]]
 
         if any([x == ' ' for x in user_inp]):
-            print("Isn't 5 letters long!")
+            print(f"Isn't {WORD_LENGTH} letters long!")
             is_error_printed = True
             continue
 
