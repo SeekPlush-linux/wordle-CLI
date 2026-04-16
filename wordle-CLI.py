@@ -15,7 +15,7 @@ from rich.panel import Panel
 # TODO: make letters bold
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.3.1-beta"
+VERSION = "v0.3.2-beta"
 GUESSES = 6
 
 guesses_used = 0
