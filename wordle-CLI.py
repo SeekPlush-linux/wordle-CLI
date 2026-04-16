@@ -72,7 +72,6 @@ def print_colored_chars(chars: str, colors: list[str]) -> None:
             temp.append(f"[black]▍{c}🮈[/]")
         else:
             temp.append(f"[#000000 on {clr}]⠀{c}⠀[/]")
-                # if not small_box else temp.append(f"[{clr}]🮈[/][#000000 on {clr}]{c}[/][{clr}]▍[/]")
     string += " ".join(temp) + "\n"
     temp = []
 
@@ -106,9 +105,6 @@ def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str]) 
 
     print("\n")
 
-    # for row_letters in KEYBOARD_LETTERS:
-    #     colors = [letter_colors[c] for c in row_letters]
-    #     print_colored_chars(row_letters, colors, small_box=True)
     print_keyboard(letter_colors)
 
 status = 0
