@@ -109,6 +109,7 @@ def print_ui(words: list[str], letter_colors: dict[str, str]) -> None:
         print_colored_chars(row_letters, colors, small_box=True)
 
 status = 0
+is_error_printed = False
 
 try:
     _print("\033[?1049h\r\033[1000A\033[2J", end="")
@@ -126,7 +127,10 @@ try:
     print_ui(words, letter_colors)
 
     while True:
-        temp: list[str] = []
+        if not is_error_printed:
+            temp: list[str] = []
+        is_error_printed = False
+
         while True:
             char = getch().upper()
 
@@ -148,8 +152,9 @@ try:
 
         user_inp = words[guesses_used]
 
-        if len(user_inp) != 5:
+        if any([x == ' ' for x in user_inp]):
             print("Isn't 5 letters long!")
+            is_error_printed = True
             continue
 
         colors = []
