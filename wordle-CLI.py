@@ -9,17 +9,14 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-# TODO: fix inputted letters, that have previously been entered before, inheriting their colors
-# TODO: fix colors of letters in previous guesses changing
-# TODO: fix letters that appear more than once in a guess show the same color, specifically the color of the last instance of the letter
 # TODO: make letters bold
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.3.2-beta"
+VERSION = "v0.3.3-beta"
 GUESSES = 6
 
 guesses_used = 0
-words = [" " * 5] * 6
+words = [[(" ", "none")] * 5] * 6
 letter_colors = {}
 for l in string.ascii_uppercase + " ":
     letter_colors[l] = "bright_white"
@@ -58,38 +55,43 @@ def print_panel(text, border_style = "bold cyan", expand: bool = True) -> None:
     )
     print(panel, justify="center")
 
-def print_colored_chars(chars: str, colors: list[str], small_box: bool = False) -> None:
+def print_colored_chars(chars: str, colors: list[str]) -> None:
     string = ""
     temp = []
 
-    if not small_box:
-        for c, clr in zip(chars, colors):
-            if clr == "bright_white":
-                temp.append(f"[black]▂▂▂[/]")
-            else:
-                temp.append(f"[{clr}]▂▂▂[/]")
-        string += " ".join(temp) + "\n"
-        temp = []
-
     for c, clr in zip(chars, colors):
-        if clr == "bright_white" and not small_box:
-            temp.append(f"[black]▍{c}🮈[/]")
+        if clr == "none":
+            temp.append(f"[black]▂▂▂[/]")
         else:
-            temp.append(f"[#000000 on {clr}]⠀{c}⠀[/]") if not small_box else temp.append(f"[{clr}]🮈[/][#000000 on {clr}]{c}[/][{clr}]▍[/]")
+            temp.append(f"[{clr}]▂▂▂[/]")
     string += " ".join(temp) + "\n"
     temp = []
 
-    if not small_box:
-        for c, clr in zip(chars, colors):
-            if clr == "bright_white":
-                temp.append(f"[black]🮂🮂🮂[/]")
-            else:
-                temp.append(f"[{clr}]🮂🮂🮂[/]")
-        string += " ".join(temp)
+    for c, clr in zip(chars, colors):
+        if clr == "none":
+            temp.append(f"[black]▍{c}🮈[/]")
+        else:
+            temp.append(f"[#000000 on {clr}]⠀{c}⠀[/]")
+                # if not small_box else temp.append(f"[{clr}]🮈[/][#000000 on {clr}]{c}[/][{clr}]▍[/]")
+    string += " ".join(temp) + "\n"
+    temp = []
+
+    for c, clr in zip(chars, colors):
+        if clr == "none":
+            temp.append(f"[black]🮂🮂🮂[/]")
+        else:
+            temp.append(f"[{clr}]🮂🮂🮂[/]")
+    string += " ".join(temp)
 
     print(string, justify="center")
 
-def print_ui(words: list[str], letter_colors: dict[str, str]) -> None:
+def print_keyboard(letter_colors: dict[str, str]) -> None:
+    for row_letters in KEYBOARD_LETTERS:
+        colors = [letter_colors[c] for c in row_letters]
+        formatted_keys = [f"[{clr}]🮈[/][#000000 on {clr}]{c}[/][{clr}]▍[/]" for c, clr in zip(row_letters, colors)]
+        print(" ".join(formatted_keys) + "\n", justify="center")
+
+def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str]) -> None:
     lines = os.get_terminal_size().lines
 
     _print("\r\033[1000A\033[2J", end="")
@@ -97,15 +99,17 @@ def print_ui(words: list[str], letter_colors: dict[str, str]) -> None:
 
     _print(f"\r\033[1000A\033[{lines // 2 - 11}B", end="")
 
-    for word in words:
-        colors = [letter_colors[c] for c in word]
+    for pair in words:
+        word = "".join([x[0] for x in pair])
+        colors = [x[1] for x in pair]
         print_colored_chars(word, colors)
 
     print("\n")
 
-    for row_letters in KEYBOARD_LETTERS:
-        colors = [letter_colors[c] for c in row_letters]
-        print_colored_chars(row_letters, colors, small_box=True)
+    # for row_letters in KEYBOARD_LETTERS:
+    #     colors = [letter_colors[c] for c in row_letters]
+    #     print_colored_chars(row_letters, colors, small_box=True)
+    print_keyboard(letter_colors)
 
 status = 0
 is_error_printed = False
@@ -138,7 +142,7 @@ try:
             elif char == "\177":
                 if temp:
                     del temp[-1]
-                    words[guesses_used] = "".join([temp[i] if i < len(temp) else " " for i in range(5)])
+                    words[guesses_used] = [(temp[i], "none") if i < len(temp) else (" ", "none") for i in range(5)]
                     print_ui(words, letter_colors)
             elif char == "\x03":
                 raise KeyboardInterrupt
@@ -146,29 +150,34 @@ try:
                 continue
             else:
                 temp += char
-                words[guesses_used] = "".join([temp[i] if i < len(temp) else " " for i in range(5)])
+                words[guesses_used] = [(temp[i], "none") if i < len(temp) else (" ", "none") for i in range(5)]
                 print_ui(words, letter_colors)
 
-        user_inp = words[guesses_used]
+        user_inp = [x[0] for x in words[guesses_used]]
 
         if any([x == ' ' for x in user_inp]):
             print("Isn't 5 letters long!")
             is_error_printed = True
             continue
 
-        colors = []
         for i, c in enumerate(user_inp):
             if c == word[i]:
-                colors.append("green")
+                words[guesses_used][i] = (c, "green")
+                letter_colors[c] = "green"
+
             elif c in word:
-                colors.append("yellow")
+                words[guesses_used][i] = (c, "yellow")
+                if letter_colors[c] not in ["green"]:
+                    letter_colors[c] = "yellow"
+
             else:
-                colors.append("black")
-            letter_colors[c] = colors[i]
+                words[guesses_used][i] = (c, "black")
+                if letter_colors[c] not in ["green", "yellow"]:
+                    letter_colors[c] = "black"
 
         print_ui(words, letter_colors)
 
-        if all([x == "green" for x in colors]):
+        if all([x[1] == "green" for x in words[guesses_used]]):
             print("[bright_green]You guessed today's wordle! Congrats![/]")
             break
 
