@@ -112,7 +112,7 @@ status = 0
 is_error_printed = False
 
 try:
-    _print("\033[?1049h\r\033[1000A\033[2J", end="")
+    _print("\033[?1049h\r\033[1000A\033[2J\033[?25l", end="")
     print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
 
     print("\n[bright_yellow]Fetching today's wordle...[/]")
@@ -191,5 +191,5 @@ except Exception:
 finally:
     print("\n[bright_yellow]Press any key to exit.[/]")
     getch()
-    _print("\033[?1049l", end="")
+    _print("\033[?1049l\033[?25h", end="")
     sys.exit(status)
