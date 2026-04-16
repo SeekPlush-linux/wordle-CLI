@@ -11,7 +11,7 @@ from rich.panel import Panel
 
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.3.3-beta"
+VERSION = "v0.4.0-beta"
 GUESSES = 6
 WORD_LENGTH = 5
 
@@ -90,11 +90,14 @@ def print_keyboard(letter_colors: dict[str, str]) -> None:
         formatted_keys = [f"[{clr}]🮈[/][bold #000000 on {clr}]{c}[/][{clr}]▍[/]" for c, clr in zip(row_letters, colors)]
         print(" ".join(formatted_keys) + "\n", justify="center")
 
-def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str]) -> None:
+def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str], optional_panel: tuple | None = None) -> None:
     lines = os.get_terminal_size().lines
 
     _print("\r\033[1000A\033[2J", end="")
     print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
+
+    if optional_panel:
+        print_panel(*optional_panel)
 
     _print(f"\r\033[1000A\033[{lines // 2 - 12}B", end="")
 
@@ -114,14 +117,12 @@ try:
     _print("\033[?1049h\r\033[1000A\033[2J\033[?25l", end="")
     print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
 
-    print("\n[bright_yellow]Fetching today's wordle...[/]")
+    print_panel("[bright_yellow]Fetching today's wordle...[/]", border_style="yellow")
 
     now = datetime.now()
     r = requests.get(f"https://www.nytimes.com/svc/wordle/v2/{now.year}-{now.month:02}-{now.day:02}.json")
     r.raise_for_status()
     word = r.json()['solution'].upper()
-
-    print("[bright_green]Successfully fetched![/]\n")
 
     print_ui(words, letter_colors)
 
@@ -152,7 +153,7 @@ try:
         user_inp = [x[0] for x in words[guesses_used]]
 
         if any([x == ' ' for x in user_inp]):
-            print(f"Isn't {WORD_LENGTH} letters long!")
+            print_ui(words, letter_colors, optional_panel=(f"[red]Isn't {WORD_LENGTH} letters long![/]", "red"))
             is_error_printed = True
             continue
 
@@ -174,13 +175,13 @@ try:
         print_ui(words, letter_colors)
 
         if all([x[1] == "green" for x in words[guesses_used]]):
-            print("[bright_green]You guessed today's wordle! Congrats![/]")
+            print_ui(words, letter_colors, optional_panel=("[bright_green]You guessed today's wordle! Congrats![/]", "bright_green"))
             break
 
         guesses_used += 1
 
         if guesses_used == GUESSES:
-            print(f"[bright_red]You failed to guess today's wordle :c[/]\nToday's wordle is: [bold]{word}[/]")
+            print_ui(words, letter_colors, optional_panel=(f"[bright_red]You failed to guess today's wordle :c[/]\nToday's wordle is: [bold]{word}[/]", "bright_red"))
             break
 
 except Exception:
