@@ -97,7 +97,7 @@ def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str]) 
     _print("\r\033[1000A\033[2J", end="")
     print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
 
-    _print(f"\r\033[1000A\033[{lines // 2 - 11}B", end="")
+    _print(f"\r\033[1000A\033[{lines // 2 - 12}B", end="")
 
     for pair in words:
         word = "".join([x[0] for x in pair])
