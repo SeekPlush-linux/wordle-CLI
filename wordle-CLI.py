@@ -9,7 +9,6 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-# TODO: make letters bold
 # TODO: add mouse support to be able to use the on-screen keyboard
 
 VERSION = "v0.3.3-beta"
@@ -70,9 +69,9 @@ def print_colored_chars(chars: str, colors: list[str]) -> None:
 
     for c, clr in zip(chars, colors):
         if clr == "none":
-            temp.append(f"[black]▍{c}🮈[/]")
+            temp.append(f"[bold black]▍{c}🮈[/]")
         else:
-            temp.append(f"[#000000 on {clr}]⠀{c}⠀[/]")
+            temp.append(f"[bold #000000 on {clr}]⠀{c}⠀[/]")
     string += " ".join(temp) + "\n"
     temp = []
 
@@ -88,7 +87,7 @@ def print_colored_chars(chars: str, colors: list[str]) -> None:
 def print_keyboard(letter_colors: dict[str, str]) -> None:
     for row_letters in KEYBOARD_LETTERS:
         colors = [letter_colors[c] for c in row_letters]
-        formatted_keys = [f"[{clr}]🮈[/][#000000 on {clr}]{c}[/][{clr}]▍[/]" for c, clr in zip(row_letters, colors)]
+        formatted_keys = [f"[{clr}]🮈[/][bold #000000 on {clr}]{c}[/][{clr}]▍[/]" for c, clr in zip(row_letters, colors)]
         print(" ".join(formatted_keys) + "\n", justify="center")
 
 def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str]) -> None:
