@@ -9,7 +9,6 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-# TODO: fix guesses decrementing even if input isnt 5 letters long
 # TODO: fix inputted letters, that have previously been entered before, inheriting their colors
 # TODO: fix colors of letters in previous guesses changing
 # TODO: fix letters that appear more than once in a guess show the same color, specifically the color of the last instance of the letter
