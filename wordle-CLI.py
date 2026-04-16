@@ -4,13 +4,11 @@ import tty
 import termios
 import traceback
 import string
-import re
 import requests
 from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-# TODO: fix visuals, especially with the keyboard
 # TODO: fix guesses decrementing even if input isnt 5 letters long
 # TODO: fix inputted letters, that have previously been entered before, inheriting their colors
 # TODO: fix colors of letters in previous guesses changing
@@ -18,14 +16,14 @@ from rich.panel import Panel
 # TODO: make letters bold
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.3.0-beta"
+VERSION = "v0.3.1-beta"
 GUESSES = 6
 
 guesses_used = 0
 words = [" " * 5] * 6
 letter_colors = {}
 for l in string.ascii_uppercase + " ":
-    letter_colors[l] = "white"
+    letter_colors[l] = "bright_white"
 KEYBOARD_LETTERS = [
     "QWERTYUIOP",
     "ASDFGHJKL",
@@ -67,7 +65,7 @@ def print_colored_chars(chars: str, colors: list[str], small_box: bool = False) 
 
     if not small_box:
         for c, clr in zip(chars, colors):
-            if clr == "white":
+            if clr == "bright_white":
                 temp.append(f"[black]▂▂▂[/]")
             else:
                 temp.append(f"[{clr}]▂▂▂[/]")
@@ -75,7 +73,7 @@ def print_colored_chars(chars: str, colors: list[str], small_box: bool = False) 
         temp = []
 
     for c, clr in zip(chars, colors):
-        if clr == "white":
+        if clr == "bright_white" and not small_box:
             temp.append(f"[black]▍{c}🮈[/]")
         else:
             temp.append(f"[#000000 on {clr}]⠀{c}⠀[/]") if not small_box else temp.append(f"[{clr}]🮈[/][#000000 on {clr}]{c}[/][{clr}]▍[/]")
@@ -84,7 +82,7 @@ def print_colored_chars(chars: str, colors: list[str], small_box: bool = False) 
 
     if not small_box:
         for c, clr in zip(chars, colors):
-            if clr == "white":
+            if clr == "bright_white":
                 temp.append(f"[black]🮂🮂🮂[/]")
             else:
                 temp.append(f"[{clr}]🮂🮂🮂[/]")
