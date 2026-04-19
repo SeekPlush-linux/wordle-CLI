@@ -9,6 +9,7 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
+# TODO: use different box characters as some (if not, many) fonts don't support some of the chars
 # TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
