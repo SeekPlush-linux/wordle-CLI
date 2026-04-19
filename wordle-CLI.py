@@ -9,6 +9,7 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
+# TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
 VERSION = "v0.4.0-beta"
