@@ -2,25 +2,31 @@ import os
 import sys
 import tty
 import termios
+import signal
 import traceback
+import time
 import string
 import requests
 from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
+# TODO: if terminal size becomes too small (min size: height = 45, width = 40), show message until min term size is reached
 # TODO: if a letter in a guess was entered more than once and one of them is green, make the rest gray instead of yellow
 # TODO: use different box characters as some (if not, many) fonts don't support some of the chars
 # TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.4.0-beta"
+VERSION = "v0.4.1-beta"
 GUESSES = 6
 WORD_LENGTH = 5
 
 guesses_used = 0
 words = [[(" ", "none")] * WORD_LENGTH] * GUESSES
 letter_colors = {}
+optional_panel = None
+active_redraws: list[bool] = []
+last_winch_sig_time = 0.0
 for l in string.ascii_uppercase + " ":
     letter_colors[l] = "bright_white"
 KEYBOARD_LETTERS = [
@@ -113,6 +119,44 @@ def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str], 
 
     print_keyboard(letter_colors)
 
+def redraw_ui(sig, frame) -> None:
+    global active_redraws
+    global last_winch_sig_time
+
+    last_winch_sig_time = time.monotonic()
+
+    if active_redraws:
+        return
+
+    active_redraws.append(True)
+
+    while True:
+        if time.monotonic() > last_winch_sig_time + 0.1:
+            break
+        time.sleep(0.01)
+
+    time.sleep(0.1)
+
+    if os.name != "nt":
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            normal_settings = termios.tcgetattr(fd)
+
+            normal_settings[3] |= (termios.ICANON | termios.ECHO | termios.ISIG)
+            normal_settings[0] |= termios.ICRNL
+            normal_settings[1] |= termios.OPOST
+
+            termios.tcsetattr(fd, termios.TCSADRAIN, normal_settings)
+
+            print_ui(words, letter_colors, optional_panel)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+    active_redraws.pop()
+
+signal.signal(signal.SIGWINCH, redraw_ui)
+
 status = 0
 is_error_printed = False
 
@@ -137,6 +181,8 @@ try:
         while True:
             char = getch().upper()
 
+            optional_panel = None
+
             if char == "\r":
                 break
             elif char == "\177":
@@ -156,7 +202,8 @@ try:
         user_inp = [x[0] for x in words[guesses_used]]
 
         if any([x == ' ' for x in user_inp]):
-            print_ui(words, letter_colors, optional_panel=(f"[red]Isn't {WORD_LENGTH} letters long![/]", "red"))
+            optional_panel = (f"[red]Isn't {WORD_LENGTH} letters long![/]", "red")
+            print_ui(words, letter_colors, optional_panel)
             is_error_printed = True
             continue
 
@@ -178,13 +225,15 @@ try:
         print_ui(words, letter_colors)
 
         if all([x[1] == "green" for x in words[guesses_used]]):
-            print_ui(words, letter_colors, optional_panel=("[bright_green]You guessed today's wordle! Congrats![/]", "bright_green"))
+            optional_panel = ("[bright_green]You guessed today's wordle! Congrats![/]", "bright_green")
+            print_ui(words, letter_colors, optional_panel)
             break
 
         guesses_used += 1
 
         if guesses_used == GUESSES:
-            print_ui(words, letter_colors, optional_panel=(f"[bright_red]You failed to guess today's wordle :c[/]\nToday's wordle is: [bold]{word}[/]", "bright_red"))
+            optional_panel = (f"[bright_red]You failed to guess today's wordle :c[/]\nToday's wordle is: [bold]{word}[/]", "bright_red")
+            print_ui(words, letter_colors, optional_panel)
             break
 
 except Exception:
