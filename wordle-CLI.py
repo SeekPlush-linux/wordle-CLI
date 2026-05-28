@@ -11,13 +11,12 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-# TODO: if terminal size becomes too small (min size: height = 45, width = 40), show message until min term size is reached
 # TODO: if a letter in a guess was entered more than once and one of them is green, make the rest gray instead of yellow
 # TODO: use different box characters as some (if not, many) fonts don't support some of the chars
 # TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.4.1-beta"
+VERSION = "v0.4.2-beta"
 GUESSES = 6
 WORD_LENGTH = 5
 
@@ -100,7 +99,16 @@ def print_keyboard(letter_colors: dict[str, str]) -> None:
         print(" ".join(formatted_keys) + "\n", justify="center")
 
 def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str], optional_panel: tuple | None = None) -> None:
-    lines = os.get_terminal_size().lines
+    size = os.get_terminal_size()
+    if size.lines < 45 or size.columns < 40:
+        _print("\r\033[1000A\033[2J", end="")
+        print("\n" * (size.lines // 2 - 2), end="")
+        print("[bold red]Terminal size too small[/]", justify="center")
+        print(f"Current: [white]{size.columns} x {size.lines}[/]", justify="center")
+        print(f"Needed:  [white]40 x 45[/]", justify="center")
+        return
+
+    lines = size.lines
 
     _print("\r\033[1000A\033[2J", end="")
     print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
@@ -162,9 +170,13 @@ is_error_printed = False
 
 try:
     _print("\033[?1049h\r\033[1000A\033[2J\033[?25l", end="")
-    print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
 
-    print_panel("[bright_yellow]Fetching today's wordle...[/]", border_style="yellow")
+    size = os.get_terminal_size()
+    if size.lines < 45 or size.columns < 40:
+        print_ui(words, letter_colors)
+    else:
+        print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
+        print_panel("[bright_yellow]Fetching today's wordle...[/]", border_style="yellow")
 
     now = datetime.now()
     r = requests.get(f"https://www.nytimes.com/svc/wordle/v2/{now.year}-{now.month:02}-{now.day:02}.json")
