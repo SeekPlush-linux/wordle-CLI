@@ -16,9 +16,15 @@ from rich.panel import Panel
 # TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.4.2-beta"
+VERSION = "v0.4.3-beta"
 GUESSES = 6
 WORD_LENGTH = 5
+MIN_WIDTH = 40
+MIN_HEIGHT = 45
+
+def is_terminal_too_small() -> bool:
+    size = os.get_terminal_size()
+    return size.lines < MIN_HEIGHT or size.columns < MIN_WIDTH
 
 guesses_used = 0
 words = [[(" ", "none")] * WORD_LENGTH] * GUESSES
@@ -100,12 +106,12 @@ def print_keyboard(letter_colors: dict[str, str]) -> None:
 
 def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str], optional_panel: tuple | None = None) -> None:
     size = os.get_terminal_size()
-    if size.lines < 45 or size.columns < 40:
+    if is_terminal_too_small():
         _print("\r\033[1000A\033[2J", end="")
         print("\n" * (size.lines // 2 - 2), end="")
         print("[bold red]Terminal size too small[/]", justify="center")
         print(f"Current: [white]{size.columns} x {size.lines}[/]", justify="center")
-        print(f"Needed:  [white]40 x 45[/]", justify="center")
+        print(f"Needed:  [white]{MIN_WIDTH} x {MIN_HEIGHT}[/]", justify="center")
         return
 
     lines = size.lines
@@ -171,8 +177,7 @@ is_error_printed = False
 try:
     _print("\033[?1049h\r\033[1000A\033[2J\033[?25l", end="")
 
-    size = os.get_terminal_size()
-    if size.lines < 45 or size.columns < 40:
+    if is_terminal_too_small():
         print_ui(words, letter_colors)
     else:
         print_panel(f"[bold][green]Wordle CLI[/] [bright_white]{VERSION}[/][/]")
@@ -192,6 +197,9 @@ try:
 
         while True:
             char = getch().upper()
+
+            if is_terminal_too_small():
+                continue
 
             optional_panel = None
 
