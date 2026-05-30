@@ -16,15 +16,11 @@ from rich.panel import Panel
 # TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.4.3-beta"
+VERSION = "v0.4.4-beta"
 GUESSES = 6
 WORD_LENGTH = 5
 MIN_WIDTH = 40
 MIN_HEIGHT = 45
-
-def is_terminal_too_small() -> bool:
-    size = os.get_terminal_size()
-    return size.lines < MIN_HEIGHT or size.columns < MIN_WIDTH
 
 guesses_used = 0
 words = [[(" ", "none")] * WORD_LENGTH] * GUESSES
@@ -43,6 +39,10 @@ KEYBOARD_LETTERS = [
 _print = print
 con = Console(highlight=False)
 print = con.print
+
+def is_terminal_too_small() -> bool:
+    size = os.get_terminal_size()
+    return size.lines < MIN_HEIGHT or size.columns < MIN_WIDTH
 
 def getch(s: str = "", show_input: bool = False) -> str:
     if s:
@@ -198,6 +198,9 @@ try:
         while True:
             char = getch().upper()
 
+            if char == "\x03":
+                raise KeyboardInterrupt
+
             if is_terminal_too_small():
                 continue
 
@@ -210,8 +213,6 @@ try:
                     del temp[-1]
                     words[guesses_used] = [(temp[i], "none") if i < len(temp) else (" ", "none") for i in range(WORD_LENGTH)]
                     print_ui(words, letter_colors)
-            elif char == "\x03":
-                raise KeyboardInterrupt
             elif len(temp) >= WORD_LENGTH or char not in string.ascii_letters:
                 continue
             else:
