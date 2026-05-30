@@ -12,6 +12,7 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
+# TODO: improve "press any key to exit" message
 # TODO: use different box characters as some (if not, many) fonts don't support some of the chars
 # TODO: add mouse support to be able to use the on-screen keyboard
 
