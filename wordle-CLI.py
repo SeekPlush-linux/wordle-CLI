@@ -11,12 +11,11 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
-# TODO: if a letter in a guess was entered more than once and one of them is green, make the rest gray instead of yellow
 # TODO: use different box characters as some (if not, many) fonts don't support some of the chars
 # TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.4.5-beta"
+VERSION = "v0.4.6-beta"
 GUESSES = 6
 WORD_LENGTH = 5
 MIN_WIDTH = 40
@@ -246,6 +245,11 @@ try:
                 words[guesses_used][i] = (c, "black")
                 if letter_colors[c] not in ["green", "yellow"]:
                     letter_colors[c] = "black"
+
+            if (c, "green") in words[guesses_used]:
+                for j in range(WORD_LENGTH):
+                    if words[guesses_used][j] == (c, "yellow"):
+                        words[guesses_used][j] = (c, "black")
 
         print_ui(words, letter_colors)
 
