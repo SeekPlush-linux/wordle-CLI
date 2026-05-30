@@ -16,7 +16,7 @@ from rich.panel import Panel
 # TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.4.4-beta"
+VERSION = "v0.4.5-beta"
 GUESSES = 6
 WORD_LENGTH = 5
 MIN_WIDTH = 40
@@ -106,12 +106,16 @@ def print_keyboard(letter_colors: dict[str, str]) -> None:
 
 def print_ui(words: list[list[tuple[str, str]]], letter_colors: dict[str, str], optional_panel: tuple | None = None) -> None:
     size = os.get_terminal_size()
+
     if is_terminal_too_small():
+        cols_color = 'bright_green' if size.columns >= MIN_WIDTH else 'bright_red'
+        lines_color = 'bright_green' if size.lines >= MIN_HEIGHT else 'bright_red'
+
         _print("\r\033[1000A\033[2J", end="")
         print("\n" * (size.lines // 2 - 2), end="")
-        print("[bold red]Terminal size too small[/]", justify="center")
-        print(f"Current: [white]{size.columns} x {size.lines}[/]", justify="center")
-        print(f"Needed:  [white]{MIN_WIDTH} x {MIN_HEIGHT}[/]", justify="center")
+        print("[bold red]Terminal size is too small![/]", justify="center")
+        print(f"Current: [bold][{cols_color}]{size.columns}[/] x [{lines_color}]{size.lines}[/][/]", justify="center")
+        print(f"Needed:  [bold]{MIN_WIDTH} x {MIN_HEIGHT}[/]", justify="center")
         return
 
     lines = size.lines
