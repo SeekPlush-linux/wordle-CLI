@@ -6,16 +6,16 @@ import signal
 import traceback
 import time
 import string
+import json
 import requests
 from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 
 # TODO: use different box characters as some (if not, many) fonts don't support some of the chars
-# TODO: check a list of words before validating guess
 # TODO: add mouse support to be able to use the on-screen keyboard
 
-VERSION = "v0.4.6-beta"
+VERSION = "v1.0.0"
 GUESSES = 6
 WORD_LENGTH = 5
 MIN_WIDTH = 40
@@ -38,6 +38,9 @@ KEYBOARD_LETTERS = [
 _print = print
 con = Console(highlight=False)
 print = con.print
+
+with open("valid-words.json", "r") as f:
+    valid_words = json.load(f)
 
 def is_terminal_too_small() -> bool:
     size = os.get_terminal_size()
@@ -227,6 +230,12 @@ try:
 
         if any([x == ' ' for x in user_inp]):
             optional_panel = (f"[red]Isn't {WORD_LENGTH} letters long![/]", "red")
+            print_ui(words, letter_colors, optional_panel)
+            is_error_printed = True
+            continue
+
+        if ''.join(user_inp).lower() not in valid_words:
+            optional_panel = ("[red]Not in word list![/]", "red")
             print_ui(words, letter_colors, optional_panel)
             is_error_printed = True
             continue
